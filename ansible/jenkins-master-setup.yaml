@@ -2,19 +2,33 @@
 - hosts: jenkins-master
   become: true
   tasks:
+    - name: Remove old Jenkins if exists
+      ansible.builtin.apt:
+        name: jenkins
+        state: absent
+        purge: yes
+
+    - name: Remove old Jenkins repo list if exists
+      ansible.builtin.file:
+        path: /etc/apt/sources.list.d/jenkins.list
+        state: absent
+
     - name: Add Jenkins GPG key
-      ansible.builtin.apt_key:
+      ansible.builtin.get_url:
         url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
-        state: present
+        dest: /usr/share/keyrings/jenkins-keyring.asc
+        mode: '0644'
 
     - name: Add Jenkins repository
-      ansible.builtin.apt_repository:
-        repo: "deb https://pkg.jenkins.io/debian-stable binary/"
-        state: present
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/jenkins.list
+        content: |
+          deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/
+        mode: '0644'
 
-    - name: Install Java (OpenJDK 11)
+    - name: Install Java (OpenJDK 17)
       ansible.builtin.apt:
-        name: openjdk-11-jre
+        name: openjdk-17-jre
         state: present
         update_cache: yes
 
@@ -22,13 +36,19 @@
       ansible.builtin.apt:
         name: jenkins
         state: present
+        update_cache: yes
 
-    - name: Start Jenkins service
+    - name: Ensure Jenkins service is started
       ansible.builtin.service:
         name: jenkins
         state: started
-
-    - name: Enable Jenkins service at boot
-      ansible.builtin.service:
-        name: jenkins
         enabled: yes
+
+    - name: Verify Jenkins war file exists
+      ansible.builtin.stat:
+        path: /usr/share/jenkins/jenkins.war
+      register: jenkins_war
+
+    - name: Debug Jenkins war status
+      ansible.builtin.debug:
+        var: jenkins_war.stat.exists

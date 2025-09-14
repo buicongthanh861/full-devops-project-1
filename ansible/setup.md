@@ -20,7 +20,7 @@ ansible_user=ubuntu
 ansible_ssh_private_key_file=/opt/congthanh-devops.pem
 
 [jenkins-slave]
-
+10.1.1.160
 
 [jenkins-slave:vars]
 ansible_user=ubuntu
@@ -34,3 +34,11 @@ neu thay nhu nay la da thanh cong
     "changed": false,
     "ping": "pong"
 }
+
+1.3 viet file vi jenkins-master-setup.yaml
+chay bang lenh ansible-playbook -i /opt/hosts  jenkins-master-setup.yaml de cai dat
+
+1.4 chay cau lenh nay de lay mk cho jenkins /var/lib/jenkins/secrets/initialAdminPassword
+
+1.5 viet file jenkins-salve-setup.yaml de chay du an java bang maven
+kiem tra thu bang cau lenh ansible-playbook -i /opt/hosts  jenkins-salve-setup.yaml --check
